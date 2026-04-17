@@ -1,0 +1,306 @@
+"""
+=============================================================================
+LAMBDA 2: FEATURE ENGINEERING + ANOMALY DETECTION
+=============================================================================
+Triggered by: SQS messages from the ingestion Lambda
+What it does:
+  1. Reads the SQS message to find the new data
+  2. Pulls recent historical data from S3 to compute rolling features
+  3. Computes features: log returns, volatility, volume spikes, momentum, z-scores
+  4. Runs anomaly detection using z-score threshold
+  5. If anomaly detected → invokes the inference Lambda with the features
+
+AWS Setup needed:
+  - IAM role with: SQS read/delete, S3 GetObject, Lambda InvokeFunction, CloudWatch logs
+  - Environment variables: S3_BUCKET, INFERENCE_FUNCTION_NAME
+  - SQS trigger: connect crypto-processing-queue as the trigger
+  - Timeout: 60 seconds
+  - Runtime: Python 3.12
+
+NOTE ON LIBRARIES:
+  This Lambda uses only standard library + boto3 (both available by default).
+  We do the math manually instead of using pandas/numpy to avoid needing
+  a Lambda Layer. If you want to use pandas/numpy, you'll need to create
+  a Lambda Layer with those packages.
+=============================================================================
+"""
+
+import json
+import boto3
+import os
+import math
+from datetime import datetime, timezone
+
+# AWS clients
+s3 = boto3.client('s3')
+lambda_client = boto3.client('lambda')
+
+# Environment variables
+S3_BUCKET = os.environ.get('S3_BUCKET', 'YOUR-BUCKET-NAME')
+INFERENCE_FUNCTION_NAME = os.environ.get('INFERENCE_FUNCTION_NAME', 'crypto-inference')
+
+# Anomaly detection threshold
+ZSCORE_THRESHOLD = float(os.environ.get('ZSCORE_THRESHOLD', '2.0'))
+
+# Rolling window sizes (in number of candles)
+# For 1h candles: 24 = 1 day, 168 = 1 week
+WINDOW_SHORT = int(os.environ.get('WINDOW_SHORT', '24'))
+WINDOW_LONG = int(os.environ.get('WINDOW_LONG', '168'))
+
+
+def get_recent_candles_from_s3(symbol, num_files=200):
+    """
+    Pull recent candle data from S3 to compute rolling features.
+    
+    We need enough history to calculate rolling windows.
+    For WINDOW_LONG=168, we need at least 168 prior candles.
+    """
+    
+    # List recent files in the raw data folder
+    prefix = f"raw/{symbol}/"
+    
+    response = s3.list_objects_v2(
+        Bucket=S3_BUCKET,
+        Prefix=prefix,
+        MaxKeys=1000
+    )
+    
+    if 'Contents' not in response:
+        print(f"No data found in S3 under {prefix}")
+        return []
+    
+    # Sort by key (which includes date, so alphabetical = chronological)
+    objects = sorted(response['Contents'], key=lambda x: x['Key'])
+    
+    # Take the most recent files
+    recent_objects = objects[-num_files:]
+    
+    # Read and combine all candles
+    all_candles = []
+    seen_timestamps = set()
+    
+    for obj in recent_objects:
+        try:
+            file_response = s3.get_object(Bucket=S3_BUCKET, Key=obj['Key'])
+            file_data = json.loads(file_response['Body'].read().decode())
+            
+            for candle in file_data.get('candles', []):
+                # Deduplicate by timestamp
+                ts = candle['timestamp']
+                if ts not in seen_timestamps:
+                    seen_timestamps.add(ts)
+                    all_candles.append(candle)
+        except Exception as e:
+            print(f"Error reading {obj['Key']}: {e}")
+            continue
+    
+    # Sort by timestamp
+    all_candles.sort(key=lambda x: x['timestamp'])
+    
+    print(f"Loaded {len(all_candles)} unique candles from S3")
+    
+    return all_candles
+
+
+def compute_features(candles):
+    """
+    Compute all features from a list of candle dicts.
+    
+    This does the same thing as the ML pipeline's compute_features(),
+    but without pandas/numpy — just pure Python math.
+    
+    Returns features for the LAST candle (the most recent one).
+    """
+    
+    if len(candles) < WINDOW_LONG + 1:
+        print(f"Not enough candles ({len(candles)}) for window size ({WINDOW_LONG})")
+        return None
+    
+    # Extract close prices and volumes as lists
+    closes = [c['close'] for c in candles]
+    volumes = [c['volume'] for c in candles]
+    highs = [c['high'] for c in candles]
+    lows = [c['low'] for c in candles]
+    
+    # --- HELPER FUNCTIONS ---
+    
+    def mean(values):
+        return sum(values) / len(values)
+    
+    def std(values):
+        m = mean(values)
+        variance = sum((x - m) ** 2 for x in values) / len(values)
+        return math.sqrt(variance) if variance > 0 else 0.0001
+    
+    # --- COMPUTE LOG RETURNS ---
+    log_returns = []
+    for i in range(1, len(closes)):
+        if closes[i - 1] > 0 and closes[i] > 0:
+            log_returns.append(math.log(closes[i] / closes[i - 1]))
+        else:
+            log_returns.append(0)
+    
+    # Current (most recent) log return
+    current_return = log_returns[-1]
+    
+    # --- ROLLING FEATURES (computed on the window ending at the current candle) ---
+    
+    # Short window returns
+    short_returns = log_returns[-WINDOW_SHORT:]
+    long_returns = log_returns[-WINDOW_LONG:]
+    
+    # 1. Log return
+    log_return = current_return
+    
+    # 2. Volatility (std of returns)
+    volatility_short = std(short_returns)
+    volatility_long = std(long_returns)
+    volatility_ratio = volatility_short / volatility_long if volatility_long > 0 else 1.0
+    
+    # 3. Volume spike
+    recent_volumes = volumes[-WINDOW_LONG:]
+    volume_ma_long = mean(recent_volumes)
+    volume_spike = volumes[-1] / volume_ma_long if volume_ma_long > 0 else 1.0
+    
+    # 4. Moving averages
+    ma_short = mean(closes[-WINDOW_SHORT:])
+    ma_long = mean(closes[-WINDOW_LONG:])
+    ma_ratio = ma_short / ma_long if ma_long > 0 else 1.0
+    
+    # 5. Momentum
+    momentum_short = (closes[-1] - closes[-WINDOW_SHORT]) / closes[-WINDOW_SHORT] if closes[-WINDOW_SHORT] > 0 else 0
+    momentum_long = (closes[-1] - closes[-WINDOW_LONG]) / closes[-WINDOW_LONG] if closes[-WINDOW_LONG] > 0 else 0
+    
+    # Rate of change
+    roc = momentum_short  # Same calculation
+    
+    # 6. Z-score of returns
+    return_mean = mean(long_returns)
+    return_std = std(long_returns)
+    return_zscore = (current_return - return_mean) / return_std if return_std > 0 else 0
+    
+    # 7. Daily range and close position
+    current_high = highs[-1]
+    current_low = lows[-1]
+    current_close = closes[-1]
+    
+    daily_range = (current_high - current_low) / current_close if current_close > 0 else 0
+    
+    price_range = current_high - current_low
+    close_position = (current_close - current_low) / price_range if price_range > 0 else 0.5
+    
+    features = {
+        'log_return': log_return,
+        'volatility_short': volatility_short,
+        'volatility_long': volatility_long,
+        'volatility_ratio': volatility_ratio,
+        'volume_spike': volume_spike,
+        'ma_ratio': ma_ratio,
+        'momentum_short': momentum_short,
+        'momentum_long': momentum_long,
+        'roc': roc,
+        'return_zscore': return_zscore,
+        'daily_range': daily_range,
+        'close_position': close_position
+    }
+    
+    return features
+
+
+def detect_anomaly(features):
+    """
+    Check if the current data point is anomalous based on z-score.
+    
+    Returns:
+    --------
+    tuple: (is_anomaly: bool, direction: int)
+      direction: +1 = price spike up, -1 = price drop, 0 = no anomaly
+    """
+    
+    zscore = features['return_zscore']
+    
+    if abs(zscore) >= ZSCORE_THRESHOLD:
+        direction = 1 if zscore > 0 else -1
+        return True, direction
+    
+    return False, 0
+
+
+def invoke_inference(features, candle, anomaly_direction):
+    """
+    Call the inference Lambda with the computed features.
+    """
+    
+    payload = {
+        "source": "feature-engineering-lambda",
+        "features": features,
+        "anomaly_direction": anomaly_direction,
+        "candle": candle,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    response = lambda_client.invoke(
+        FunctionName=INFERENCE_FUNCTION_NAME,
+        InvocationType='Event',  # Async — don't wait for response
+        Payload=json.dumps(payload)
+    )
+    
+    print(f"Invoked inference Lambda (status: {response['StatusCode']})")
+
+
+def lambda_handler(event, context):
+    """
+    Main Lambda entry point.
+    Triggered by SQS messages from the ingestion Lambda.
+    """
+    
+    try:
+        # Process each SQS message
+        for record in event.get('Records', []):
+            message = json.loads(record['body'])
+            
+            symbol = message.get('symbol', 'BTCUSDT')
+            s3_key = message.get('s3_key', '')
+            
+            print(f"Processing: {s3_key} for {symbol}")
+            
+            # Step 1: Get recent candle history from S3
+            candles = get_recent_candles_from_s3(symbol)
+            
+            if len(candles) < WINDOW_LONG + 1:
+                print(f"Not enough data yet ({len(candles)} candles). "
+                      f"Need at least {WINDOW_LONG + 1}. Skipping.")
+                continue
+            
+            # Step 2: Compute features
+            features = compute_features(candles)
+            
+            if features is None:
+                print("Feature computation failed. Skipping.")
+                continue
+            
+            print(f"Features computed. Z-score: {features['return_zscore']:.3f}")
+            
+            # Step 3: Anomaly detection
+            is_anomaly, direction = detect_anomaly(features)
+            
+            if is_anomaly:
+                direction_str = "UP" if direction > 0 else "DOWN"
+                print(f"ANOMALY DETECTED! Direction: {direction_str}, "
+                      f"Z-score: {features['return_zscore']:.3f}")
+                
+                # Step 4: Send to inference service
+                latest_candle = candles[-1]
+                invoke_inference(features, latest_candle, direction)
+            else:
+                print(f"No anomaly (z-score: {features['return_zscore']:.3f}, "
+                      f"threshold: {ZSCORE_THRESHOLD})")
+        
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"message": "Processing complete"})
+        }
+        
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        raise  # Re-raise so SQS retries the message
