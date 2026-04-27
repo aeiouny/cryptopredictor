@@ -163,7 +163,7 @@ def train_models(df, symbol):
     
     # Train all 3 models
     print(f"\n--- Logistic Regression ---")
-    lr = LogisticRegression(random_state=42, max_iter=1000)
+    lr = LogisticRegression(random_state=42, max_iter=1000, class_weight='balanced')
     lr.fit(X_train, y_train)
     lr_acc = accuracy_score(y_test, lr.predict(X_test))
     print(f"Accuracy: {lr_acc:.3f}")

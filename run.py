@@ -67,7 +67,7 @@ sklearn_estimator = SKLearn(
     # Hyperparameters passed to the training script
     hyperparameters={
         'zscore-threshold': 2.0,
-        'breakout-threshold': 0.02,
+        'breakout-threshold': 0.01,
         'lookforward-window': 5,
         'window-short': 7,
         'window-long': 30,
