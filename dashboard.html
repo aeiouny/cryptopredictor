@@ -4,262 +4,411 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crypto Prediction Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #080c12;
-    --surface: #0d1420;
-    --surface2: #121b2e;
-    --border: rgba(99, 179, 237, 0.12);
-    --border-bright: rgba(99, 179, 237, 0.3);
-    --accent: #63b3ed;
-    --accent2: #4fd1c5;
-    --green: #68d391;
-    --red: #fc8181;
-    --amber: #f6ad55;
-    --text: #e2e8f0;
-    --muted: #718096;
-    --card-glow: 0 0 30px rgba(99, 179, 237, 0.05);
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2234;
+    --border: rgba(148, 163, 184, 0.08);
+    --border-hover: rgba(148, 163, 184, 0.18);
+    --accent: #3b82f6;
+    --accent-dim: rgba(59, 130, 246, 0.12);
+    --green: #10b981;
+    --green-dim: rgba(16, 185, 129, 0.12);
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --text: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'Syne', sans-serif;
+    font-family: var(--sans);
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding: 24px;
+    padding: 20px 24px;
   }
 
+  /* Header */
   .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 28px;
-    padding-bottom: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
   }
 
-  .header-left h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-  .header-left p { font-size: 13px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-  .header-right { display: flex; align-items: center; gap: 16px; }
+  .logo {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+  }
 
-  .live-badge {
-    display: flex; align-items: center; gap: 7px;
-    background: rgba(104, 211, 145, 0.1);
-    border: 1px solid rgba(104, 211, 145, 0.25);
-    padding: 6px 12px; border-radius: 20px;
-    font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--green);
+  .header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .live-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-dim);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--green);
+    font-weight: 500;
   }
 
   .live-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--green); animation: pulse 2s infinite;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
   }
 
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
 
   .symbol-toggle {
-    display: flex; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 10px; padding: 4px; gap: 4px;
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
   }
 
   .symbol-btn {
-    padding: 7px 18px; border-radius: 7px; border: none; cursor: pointer;
-    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
-    transition: all 0.2s; background: transparent; color: var(--muted);
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.15s;
+    background: transparent;
+    color: var(--text-muted);
   }
 
-  .symbol-btn.active { background: var(--accent); color: #000; }
-
-  .price-ticker { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-
-  .price-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 18px 22px;
-    display: flex; align-items: center; justify-content: space-between;
-    box-shadow: var(--card-glow); transition: border-color 0.2s;
+  .symbol-btn.active {
+    background: var(--accent);
+    color: white;
   }
 
-  .price-card:hover { border-color: var(--border-bright); }
-  .price-card .symbol { font-size: 13px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
-  .price-card .price { font-size: 26px; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
-  .price-card .change { font-size: 13px; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
-  .price-card .change.up { color: var(--green); }
-  .price-card .change.down { color: var(--red); }
-
-  .price-badge {
-    padding: 8px 14px; border-radius: 8px; font-size: 12px;
-    font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.5px;
+  /* Metrics */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
   }
 
-  .price-badge.btc { background: rgba(246, 173, 85, 0.15); color: var(--amber); border: 1px solid rgba(246, 173, 85, 0.25); }
-  .price-badge.xrp { background: rgba(99, 179, 237, 0.15); color: var(--accent); border: 1px solid rgba(99, 179, 237, 0.25); }
-
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
-
-  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; box-shadow: var(--card-glow); }
-  .metric-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
-  .metric-card .value { font-size: 28px; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
-  .metric-card .sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
-
-  .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-bottom: 16px; }
-
-  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--card-glow); }
-
-  .panel-title {
-    font-size: 13px; font-weight: 700; color: var(--text);
-    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;
-    font-family: 'JetBrains Mono', monospace;
-    display: flex; align-items: center; justify-content: space-between;
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: border-color 0.2s;
   }
 
-  .panel-title span { font-weight: 400; color: var(--muted); font-size: 11px; }
+  .metric:hover { border-color: var(--border-hover); }
 
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .metric-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+
+  .metric-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  /* Main layout */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 16px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--border-hover); }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title-badge {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
 
   thead th {
-    text-align: left; padding: 8px 10px; color: var(--muted);
-    font-size: 11px; font-family: 'JetBrains Mono', monospace;
-    text-transform: uppercase; letter-spacing: 0.8px;
-    border-bottom: 1px solid var(--border); font-weight: 400;
+    text-align: left;
+    padding: 6px 10px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
   }
 
-  tbody tr { border-bottom: 1px solid rgba(99, 179, 237, 0.06); cursor: pointer; transition: background 0.15s; }
-  tbody tr:hover { background: rgba(99, 179, 237, 0.04); }
-  tbody tr.selected { background: rgba(99, 179, 237, 0.08); }
-  tbody td { padding: 11px 10px; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
 
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
-  .badge.breakout { background: rgba(104, 211, 145, 0.15); color: var(--green); border: 1px solid rgba(104, 211, 145, 0.25); }
-  .badge.reversal { background: rgba(246, 173, 85, 0.15); color: var(--amber); border: 1px solid rgba(246, 173, 85, 0.25); }
-  .badge.pending { background: rgba(113, 128, 150, 0.1); color: var(--muted); border: 1px solid rgba(113, 128, 150, 0.2); }
-  .badge.btc-badge { background: rgba(246, 173, 85, 0.1); color: var(--amber); border: 1px solid rgba(246, 173, 85, 0.2); }
-  .badge.xrp-badge { background: rgba(99, 179, 237, 0.1); color: var(--accent); border: 1px solid rgba(99, 179, 237, 0.2); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.selected { background: var(--accent-dim); }
 
-  .conf-bar { display: flex; align-items: center; gap: 8px; }
-  .conf-track { flex: 1; height: 4px; background: rgba(113, 128, 150, 0.2); border-radius: 2px; overflow: hidden; }
+  tbody td {
+    padding: 10px 10px;
+    font-family: var(--mono);
+    color: var(--text);
+    font-size: 12px;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    font-family: var(--mono);
+  }
+
+  .badge.reversal { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+  .badge.breakout { background: var(--green-dim); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+  .badge.btc { background: rgba(251,146,60,0.1); color: #fb923c; border: 1px solid rgba(251,146,60,0.2); }
+  .badge.xrp { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(59,130,246,0.2); }
+
+  /* Confidence bar */
+  .conf-bar { display: flex; align-items: center; gap: 6px; }
+  .conf-track { flex: 1; height: 3px; background: var(--border-hover); border-radius: 2px; overflow: hidden; min-width: 40px; }
   .conf-fill { height: 100%; border-radius: 2px; background: var(--accent); }
   .conf-fill.high { background: var(--green); }
   .conf-fill.med { background: var(--amber); }
+  .conf-pct { font-size: 11px; color: var(--text-muted); min-width: 28px; text-align: right; }
 
-  .right-panels { display: flex; flex-direction: column; gap: 16px; }
+  /* Right sidebar */
+  .sidebar { display: flex; flex-direction: column; gap: 12px; }
 
-  .feature-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(99, 179, 237, 0.06); font-size: 12px; }
-  .feature-row:last-child { border-bottom: none; }
-  .feature-name { color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-  .feature-val { font-family: 'JetBrains Mono', monospace; color: var(--text); font-weight: 500; }
-  .feature-val.positive { color: var(--green); }
-  .feature-val.negative { color: var(--red); }
-  .feature-val.highlight { color: var(--accent); }
+  /* Alert card */
+  .alert-card {
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 4px;
+  }
 
-  .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .health-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); }
-  .health-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .health-dot.ok { background: var(--green); box-shadow: 0 0 6px rgba(104, 211, 145, 0.5); }
-  .health-label { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-  .health-status { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text); margin-left: auto; }
+  .alert-card.reversal-card { background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.2); }
+  .alert-card.breakout-card { background: var(--green-dim); border: 1px solid rgba(16,185,129,0.2); }
 
-  .model-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(99, 179, 237, 0.06); font-size: 12px; }
-  .model-row:last-child { border-bottom: none; }
-  .model-name { font-family: 'JetBrains Mono', monospace; color: var(--text); }
-  .model-acc { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent2); }
-  .model-best { font-size: 10px; background: rgba(79, 209, 197, 0.15); color: var(--accent2); border: 1px solid rgba(79, 209, 197, 0.25); padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+  .alert-type { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .alert-card.reversal-card .alert-type { color: var(--amber); }
+  .alert-card.breakout-card .alert-type { color: var(--green); }
 
-  .alert-box { background: rgba(104, 211, 145, 0.07); border: 1px solid rgba(104, 211, 145, 0.2); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
-  .alert-box.reversal-alert { background: rgba(246, 173, 85, 0.07); border-color: rgba(246, 173, 85, 0.2); }
-  .alert-title { font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
-  .alert-title.reversal { color: var(--amber); }
-  .alert-sub { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-  .alert-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-  .alert-detail-item .dl { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px; }
-  .alert-detail-item .dv { font-size: 13px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .alert-sub { font-size: 11px; color: var(--text-muted); font-family: var(--mono); margin-bottom: 12px; }
 
-  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .alert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-  .zscore-display { text-align: center; padding: 10px 0; }
-  .zscore-number { font-size: 48px; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -3px; line-height: 1; }
-  .zscore-number.positive { color: var(--green); }
-  .zscore-number.negative { color: var(--red); }
-  .zscore-label { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 6px; }
+  .alert-item .al { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 2px; }
+  .alert-item .av { font-size: 13px; font-family: var(--mono); font-weight: 600; color: var(--text); }
 
-  .loading { text-align: center; color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 40px 0; }
+  /* Price prediction highlight */
+  .price-prediction-row {
+    background: var(--accent-dim);
+    border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-  .table-scroll { max-height: 340px; overflow-y: auto; }
-  .table-scroll::-webkit-scrollbar { width: 4px; }
+  .pp-label { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+  .pp-value { font-size: 14px; font-family: var(--mono); font-weight: 700; color: var(--text); }
+  .pp-change { font-size: 11px; font-family: var(--mono); margin-top: 1px; }
+  .pp-change.up { color: var(--green); }
+  .pp-change.down { color: var(--red); }
+
+  /* Feature snapshot */
+  .feat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  .feat-row:last-child { border-bottom: none; }
+  .feat-name { color: var(--text-muted); font-family: var(--mono); }
+  .feat-val { font-family: var(--mono); font-weight: 500; color: var(--text); }
+  .feat-val.pos { color: var(--green); }
+  .feat-val.neg { color: var(--red); }
+  .feat-val.hi { color: var(--accent); }
+
+  /* Pipeline health */
+  .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .health-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 9px;
+    background: var(--surface2);
+    border-radius: 7px;
+    border: 1px solid var(--border);
+  }
+
+  .hdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .hdot.ok { background: var(--green); box-shadow: 0 0 5px rgba(16,185,129,0.4); }
+  .hlabel { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
+  .hval { font-size: 10px; font-family: var(--mono); color: var(--text); margin-left: auto; }
+
+  .loading { text-align: center; color: var(--text-muted); font-family: var(--mono); font-size: 12px; padding: 32px 0; }
+  .table-scroll { max-height: 420px; overflow-y: auto; }
+  .table-scroll::-webkit-scrollbar { width: 3px; }
   .table-scroll::-webkit-scrollbar-track { background: transparent; }
-  .table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
 </style>
 </head>
 <body>
 
+<!-- Header -->
 <div class="header">
-  <div class="header-left">
-    <h1>Crypto Prediction System</h1>
-    <p id="last-updated">Loading...</p>
+  <div class="header-title">
+    <div class="logo">₿</div>
+    <div>
+      <h1>Crypto Prediction System</h1>
+      <div class="header-sub" id="last-updated">Loading...</div>
+    </div>
   </div>
   <div class="header-right">
     <div class="symbol-toggle">
-      <button class="symbol-btn active" onclick="setSymbol('ALL', this)">ALL</button>
-      <button class="symbol-btn" onclick="setSymbol('BTCUSDT', this)">BTC</button>
-      <button class="symbol-btn" onclick="setSymbol('XRPUSDT', this)">XRP</button>
+      <button class="symbol-btn active" onclick="setSymbol('ALL',this)">ALL</button>
+      <button class="symbol-btn" onclick="setSymbol('BTCUSDT',this)">BTC</button>
+      <button class="symbol-btn" onclick="setSymbol('XRPUSDT',this)">XRP</button>
     </div>
-    <div class="live-badge">
+    <div class="live-pill">
       <div class="live-dot"></div>
-      Live — DynamoDB
+      Live · DynamoDB
     </div>
   </div>
 </div>
 
-<div class="price-ticker">
-  <div class="price-card">
-    <div>
-      <div class="symbol">BTCUSDT</div>
-      <div class="price" id="btc-price">--</div>
-      <div class="change" id="btc-change">loading...</div>
-    </div>
-    <div class="price-badge btc">BTC</div>
-  </div>
-  <div class="price-card">
-    <div>
-      <div class="symbol">XRPUSDT</div>
-      <div class="price" id="xrp-price">--</div>
-      <div class="change" id="xrp-change">loading...</div>
-    </div>
-    <div class="price-badge xrp">XRP</div>
-  </div>
-</div>
-
+<!-- Metrics -->
 <div class="metrics">
-  <div class="metric-card">
-    <div class="label">Anomalies Detected</div>
-    <div class="value" id="metric-anomalies">--</div>
-    <div class="sub" id="metric-anomalies-sub">loading...</div>
+  <div class="metric">
+    <div class="metric-label">Anomalies Detected</div>
+    <div class="metric-value" id="metric-anomalies">--</div>
+    <div class="metric-sub" id="metric-sub">loading...</div>
   </div>
-  <div class="metric-card">
-    <div class="label">Model Accuracy</div>
-    <div class="value" id="metric-accuracy">--</div>
-    <div class="sub">best model</div>
+  <div class="metric">
+    <div class="metric-label">Alerts Sent</div>
+    <div class="metric-value" id="metric-alerts">--</div>
+    <div class="metric-sub">confidence ≥ 60%</div>
   </div>
-  <div class="metric-card">
-    <div class="label">Alerts Sent</div>
-    <div class="value" id="metric-alerts">--</div>
-    <div class="sub">confidence > 60%</div>
-  </div>
-  <div class="metric-card">
-    <div class="label">Avg Confidence</div>
-    <div class="value" id="metric-confidence">--</div>
-    <div class="sub">across all predictions</div>
+  <div class="metric">
+    <div class="metric-label">Avg Confidence</div>
+    <div class="metric-value" id="metric-conf">--</div>
+    <div class="metric-sub">across all predictions</div>
   </div>
 </div>
 
-<div class="main-grid">
-  <div class="panel">
-    <div class="panel-title">
+<!-- Main -->
+<div class="main">
+
+  <!-- Predictions table -->
+  <div class="card">
+    <div class="card-title">
       Recent Predictions
-      <span id="prediction-count">loading...</span>
+      <span class="card-title-badge" id="pred-count">loading...</span>
     </div>
     <div class="table-scroll">
       <table>
@@ -270,102 +419,82 @@
             <th>Z-Score</th>
             <th>Prediction</th>
             <th>Confidence</th>
-            <th>Best Model</th>
+            <th>Model</th>
+            <th>Predicted Δ%</th>
           </tr>
         </thead>
-        <tbody id="predictions-tbody">
-          <tr><td colspan="6" class="loading">Loading predictions...</td></tr>
+        <tbody id="tbody">
+          <tr><td colspan="7" class="loading">Loading predictions...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="right-panels">
-    <div class="panel">
-      <div class="panel-title">Latest Alert</div>
-      <div class="alert-box" id="alert-box">
-        <div class="alert-title" id="alert-title">Loading...</div>
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <!-- Latest alert -->
+    <div class="card">
+      <div class="card-title">Latest Alert</div>
+      <div id="alert-card" class="alert-card reversal-card">
+        <div class="alert-type" id="alert-type">Loading...</div>
         <div class="alert-sub" id="alert-sub">Fetching from DynamoDB</div>
-        <div class="alert-details">
-          <div class="alert-detail-item"><div class="dl">Confidence</div><div class="dv" id="alert-confidence">--</div></div>
-          <div class="alert-detail-item"><div class="dl">Price</div><div class="dv" id="alert-price">--</div></div>
-          <div class="alert-detail-item"><div class="dl">Direction</div><div class="dv" id="alert-direction">--</div></div>
-          <div class="alert-detail-item"><div class="dl">Time</div><div class="dv" id="alert-time">--</div></div>
+        <div class="alert-grid">
+          <div class="alert-item"><div class="al">Confidence</div><div class="av" id="al-conf">--</div></div>
+          <div class="alert-item"><div class="al">Direction</div><div class="av" id="al-dir">--</div></div>
+          <div class="alert-item"><div class="al">Price</div><div class="av" id="al-price">--</div></div>
+          <div class="alert-item"><div class="al">Time</div><div class="av" id="al-time">--</div></div>
+        </div>
+        <!-- Price prediction highlight -->
+        <div class="price-prediction-row" id="pp-row">
+          <div>
+            <div class="pp-label">Predicted Next Price</div>
+            <div class="pp-change" id="pp-change">--</div>
+          </div>
+          <div class="pp-value" id="pp-price">--</div>
         </div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-title">Feature Snapshot <span>click a row</span></div>
-      <div id="feature-snapshot">
-        <div class="feature-row"><span class="feature-name">log_return</span><span class="feature-val" id="f-log-return">--</span></div>
-        <div class="feature-row"><span class="feature-name">volatility_ratio</span><span class="feature-val" id="f-vol-ratio">--</span></div>
-        <div class="feature-row"><span class="feature-name">volume_spike</span><span class="feature-val" id="f-vol-spike">--</span></div>
-        <div class="feature-row"><span class="feature-name">ma_ratio</span><span class="feature-val" id="f-ma-ratio">--</span></div>
-        <div class="feature-row"><span class="feature-name">momentum_short</span><span class="feature-val" id="f-momentum">--</span></div>
-        <div class="feature-row"><span class="feature-name">return_zscore</span><span class="feature-val highlight" id="f-zscore">--</span></div>
-        <div class="feature-row"><span class="feature-name">close_position</span><span class="feature-val" id="f-close-pos">--</span></div>
+    <!-- Feature snapshot -->
+    <div class="card">
+      <div class="card-title">Feature Snapshot <span class="card-title-badge">click a row</span></div>
+      <div class="feat-row"><span class="feat-name">log_return</span><span class="feat-val" id="f-lr">--</span></div>
+      <div class="feat-row"><span class="feat-name">volatility_ratio</span><span class="feat-val" id="f-vr">--</span></div>
+      <div class="feat-row"><span class="feat-name">volume_spike</span><span class="feat-val" id="f-vs">--</span></div>
+      <div class="feat-row"><span class="feat-name">ma_ratio</span><span class="feat-val" id="f-mr">--</span></div>
+      <div class="feat-row"><span class="feat-name">momentum_short</span><span class="feat-val" id="f-ms">--</span></div>
+      <div class="feat-row"><span class="feat-name">return_zscore</span><span class="feat-val hi" id="f-zs">--</span></div>
+      <div class="feat-row"><span class="feat-name">close_position</span><span class="feat-val" id="f-cp">--</span></div>
+    </div>
+
+    <!-- Pipeline health -->
+    <div class="card">
+      <div class="card-title">Pipeline Health</div>
+      <div class="health-grid">
+        <div class="health-item"><div class="hdot ok"></div><span class="hlabel">EventBridge</span><span class="hval">Active</span></div>
+        <div class="health-item"><div class="hdot ok"></div><span class="hlabel">Ingestion</span><span class="hval">Healthy</span></div>
+        <div class="health-item"><div class="hdot ok"></div><span class="hlabel">SQS</span><span class="hval">Healthy</span></div>
+        <div class="health-item"><div class="hdot ok"></div><span class="hlabel">Feature Eng.</span><span class="hval">Healthy</span></div>
+        <div class="health-item"><div class="hdot ok"></div><span class="hlabel">Inference</span><span class="hval">Healthy</span></div>
+        <div class="health-item"><div class="hdot ok"></div><span class="hlabel">DynamoDB</span><span class="hval" id="h-dynamo">-- items</span></div>
+        <div class="health-item"><div class="hdot ok"></div><span class="hlabel">SNS</span><span class="hval" id="h-sns">-- sent</span></div>
+        <div class="health-item"><div class="hdot ok"></div><span class="hlabel">CloudWatch</span><span class="hval">0 alarms</span></div>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="bottom-grid">
-  <div class="panel">
-    <div class="panel-title">Model Comparison</div>
-    <div class="model-row"><span class="model-name">Logistic Regression</span><span class="model-acc" id="lr-acc">Supervised</span></div>
-    <div class="model-row"><span class="model-name">Random Forest</span><span class="model-acc" id="rf-acc">Supervised</span></div>
-    <div class="model-row">
-      <span class="model-name">Gradient Boosting</span>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="model-acc" id="gb-acc">Supervised</span>
-        <span class="model-best">BEST</span>
-      </div>
-    </div>
-    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px;">ALL MODELS: SUPERVISED</div>
-      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">Trained on labeled BTC + XRP anomaly data</div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="panel-title">Pipeline Health</div>
-    <div class="health-grid">
-      <div class="health-item"><div class="health-dot ok"></div><span class="health-label">EventBridge</span><span class="health-status">Active</span></div>
-      <div class="health-item"><div class="health-dot ok"></div><span class="health-label">Ingestion</span><span class="health-status">Healthy</span></div>
-      <div class="health-item"><div class="health-dot ok"></div><span class="health-label">SQS Queue</span><span class="health-status">0 msgs</span></div>
-      <div class="health-item"><div class="health-dot ok"></div><span class="health-label">Feature Eng.</span><span class="health-status">Healthy</span></div>
-      <div class="health-item"><div class="health-dot ok"></div><span class="health-label">Inference</span><span class="health-status">Healthy</span></div>
-      <div class="health-item"><div class="health-dot ok"></div><span class="health-label">DynamoDB</span><span class="health-status" id="dynamo-count">-- items</span></div>
-      <div class="health-item"><div class="health-dot ok"></div><span class="health-label">SNS Alerts</span><span class="health-status" id="sns-count">-- sent</span></div>
-      <div class="health-item"><div class="health-dot ok"></div><span class="health-label">CloudWatch</span><span class="health-status">0 alarms</span></div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="panel-title">Latest Z-Score</div>
-    <div class="zscore-display">
-      <div class="zscore-number" id="current-zscore">--</div>
-      <div class="zscore-label">standard deviations from mean</div>
-      <div style="margin-top:16px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted);">
-        Threshold: ±2.0 — <span id="zscore-status" style="color:var(--muted);">loading</span>
-      </div>
-    </div>
   </div>
 </div>
 
 <script>
-const API_BASE_URL = 'https://9d9d6g2g4h.execute-api.us-east-2.amazonaws.com/';
-
+const API = 'https://9d9d6g2g4h.execute-api.us-east-2.amazonaws.com';
 let currentSymbol = 'ALL';
 let allPredictions = [];
 let selectedRow = 0;
 
-// ===================== API =====================
-
-async function fetchPredictions(symbol) {
+async function fetchPredictions(sym) {
   try {
-    const res = await fetch(`${API_BASE_URL}/predictions?symbol=${symbol}&limit=50`);
+    const res = await fetch(`${API}/predictions?symbol=${sym}&limit=50`);
     const data = await res.json();
     return (data.predictions || []).map(item => {
       let features = {};
@@ -378,6 +507,8 @@ async function fetchPredictions(symbol) {
         confidence: parseFloat(item.confidence) || 0,
         model: item.best_model || 'unknown',
         price: parseFloat(item.close_price) || 0,
+        pctChange: item.predicted_pct_change && item.predicted_pct_change !== 'N/A' ? parseFloat(item.predicted_pct_change) : null,
+        predictedPrice: item.predicted_price && item.predicted_price !== 'N/A' ? parseFloat(item.predicted_price) : null,
         logReturn: features.log_return || 0,
         volRatio: features.volatility_ratio || 0,
         volSpike: features.volume_spike || 0,
@@ -386,167 +517,137 @@ async function fetchPredictions(symbol) {
         closePos: features.close_position || 0
       };
     });
-  } catch(e) {
-    console.error('Failed to fetch predictions:', e);
-    return [];
-  }
+  } catch(e) { console.error(e); return []; }
 }
-
-async function fetchStats(symbol) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/stats?symbol=${symbol}`);
-    return await res.json();
-  } catch(e) {
-    console.error('Failed to fetch stats:', e);
-    return null;
-  }
-}
-
-// ===================== RENDER =====================
 
 function getFiltered() {
-  if (currentSymbol === 'ALL') return allPredictions;
-  return allPredictions.filter(p => p.symbol === currentSymbol);
+  return currentSymbol === 'ALL' ? allPredictions : allPredictions.filter(p => p.symbol === currentSymbol);
 }
 
 function renderTable() {
   const data = getFiltered();
-  const tbody = document.getElementById('predictions-tbody');
+  const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
 
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="loading">No predictions yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="loading">No predictions yet</td></tr>';
     return;
   }
 
   data.forEach((p, i) => {
     const confClass = p.confidence >= 0.8 ? 'high' : p.confidence >= 0.65 ? 'med' : '';
-    const symbolClass = p.symbol === 'BTCUSDT' ? 'btc-badge' : 'xrp-badge';
-    const symbolLabel = p.symbol === 'BTCUSDT' ? 'BTC' : 'XRP';
+    const symClass = p.symbol === 'BTCUSDT' ? 'btc' : 'xrp';
+    const symLabel = p.symbol === 'BTCUSDT' ? 'BTC' : 'XRP';
     const zSign = p.zscore > 0 ? '+' : '';
+    const zColor = p.zscore > 0 ? 'var(--green)' : 'var(--red)';
     const modelShort = p.model === 'gradient_boosting' ? 'GB' : p.model === 'random_forest' ? 'RF' : 'LR';
+
+    let pctCell = '--';
+    if (p.pctChange !== null) {
+      const sign = p.pctChange >= 0 ? '+' : '';
+      const color = p.pctChange >= 0 ? 'var(--green)' : 'var(--red)';
+      pctCell = `<span style="color:${color};font-weight:600">${sign}${(p.pctChange*100).toFixed(3)}%</span>`;
+    }
 
     const tr = document.createElement('tr');
     if (i === selectedRow) tr.classList.add('selected');
-    tr.onclick = () => { selectedRow = i; renderTable(); updateFeatureSnapshot(p); updateZscore(p.zscore); };
+    tr.onclick = () => { selectedRow = i; renderTable(); updateFeature(p); };
 
     tr.innerHTML = `
-      <td>${p.time}</td>
-      <td><span class="badge ${symbolClass}">${symbolLabel}</span></td>
-      <td style="color:${p.zscore > 0 ? 'var(--green)' : 'var(--red)'};font-weight:700;">${zSign}${parseFloat(p.zscore).toFixed(2)}</td>
+      <td style="color:var(--text-muted)">${p.time}</td>
+      <td><span class="badge ${symClass}">${symLabel}</span></td>
+      <td style="color:${zColor};font-weight:600">${zSign}${parseFloat(p.zscore).toFixed(2)}</td>
       <td><span class="badge ${p.prediction}">${p.prediction}</span></td>
       <td>
         <div class="conf-bar">
-          <div class="conf-track"><div class="conf-fill ${confClass}" style="width:${Math.min(p.confidence*100, 100)}%"></div></div>
-          <span style="font-size:11px;color:var(--muted);min-width:30px;">${Math.round(p.confidence*100)}%</span>
+          <div class="conf-track"><div class="conf-fill ${confClass}" style="width:${Math.min(p.confidence*100,100)}%"></div></div>
+          <span class="conf-pct">${Math.round(p.confidence*100)}%</span>
         </div>
       </td>
-      <td style="color:var(--muted);">${modelShort}</td>
+      <td style="color:var(--text-muted)">${modelShort}</td>
+      <td>${pctCell}</td>
     `;
     tbody.appendChild(tr);
   });
 
-  document.getElementById('prediction-count').textContent = `${data.length} total`;
+  document.getElementById('pred-count').textContent = `${data.length} total`;
 }
 
-function updateFeatureSnapshot(p) {
-  const fmt = v => parseFloat(v) >= 0 ? `+${parseFloat(v).toFixed(3)}` : parseFloat(v).toFixed(3);
-  const cls = v => parseFloat(v) > 0 ? 'positive' : parseFloat(v) < 0 ? 'negative' : '';
+function updateFeature(p) {
+  const fmt = v => parseFloat(v) >= 0 ? `+${parseFloat(v).toFixed(4)}` : parseFloat(v).toFixed(4);
+  const cls = v => parseFloat(v) > 0 ? 'pos' : parseFloat(v) < 0 ? 'neg' : '';
 
-  document.getElementById('f-log-return').textContent = fmt(p.logReturn);
-  document.getElementById('f-log-return').className = `feature-val ${cls(p.logReturn)}`;
-  document.getElementById('f-vol-ratio').textContent = parseFloat(p.volRatio).toFixed(2);
-  document.getElementById('f-vol-spike').textContent = `${parseFloat(p.volSpike).toFixed(2)}x`;
-  document.getElementById('f-ma-ratio').textContent = parseFloat(p.maRatio).toFixed(3);
-  document.getElementById('f-momentum').textContent = fmt(p.momentum);
-  document.getElementById('f-momentum').className = `feature-val ${cls(p.momentum)}`;
-  document.getElementById('f-zscore').textContent = `${parseFloat(p.zscore) > 0 ? '+' : ''}${parseFloat(p.zscore).toFixed(2)}`;
-  document.getElementById('f-close-pos').textContent = parseFloat(p.closePos).toFixed(2);
-}
-
-function updateZscore(z) {
-  const el = document.getElementById('current-zscore');
-  el.textContent = `${parseFloat(z) > 0 ? '+' : ''}${parseFloat(z).toFixed(2)}`;
-  el.className = `zscore-number ${parseFloat(z) > 0 ? 'positive' : 'negative'}`;
-  const status = document.getElementById('zscore-status');
-  if (Math.abs(parseFloat(z)) >= 2.0) {
-    status.textContent = 'ANOMALY DETECTED';
-    status.style.color = 'var(--red)';
-  } else {
-    status.textContent = 'No anomaly';
-    status.style.color = 'var(--green)';
-  }
+  document.getElementById('f-lr').textContent = fmt(p.logReturn);
+  document.getElementById('f-lr').className = `feat-val ${cls(p.logReturn)}`;
+  document.getElementById('f-vr').textContent = parseFloat(p.volRatio).toFixed(3);
+  document.getElementById('f-vs').textContent = `${parseFloat(p.volSpike).toFixed(4)}x`;
+  document.getElementById('f-mr').textContent = parseFloat(p.maRatio).toFixed(4);
+  document.getElementById('f-ms').textContent = fmt(p.momentum);
+  document.getElementById('f-ms').className = `feat-val ${cls(p.momentum)}`;
+  document.getElementById('f-zs').textContent = `${parseFloat(p.zscore) > 0 ? '+' : ''}${parseFloat(p.zscore).toFixed(2)}`;
+  document.getElementById('f-cp').textContent = parseFloat(p.closePos).toFixed(2);
 }
 
 function updateAlert(p) {
   if (!p) return;
-  const box = document.getElementById('alert-box');
-  const title = document.getElementById('alert-title');
+  const card = document.getElementById('alert-card');
+  const type = document.getElementById('alert-type');
   if (p.prediction === 'breakout') {
-    box.className = 'alert-box';
-    title.className = 'alert-title';
-    title.textContent = 'Breakout Predicted';
+    card.className = 'alert-card breakout-card';
+    type.textContent = 'Breakout Predicted';
   } else {
-    box.className = 'alert-box reversal-alert';
-    title.className = 'alert-title reversal';
-    title.textContent = 'Reversal Predicted';
+    card.className = 'alert-card reversal-card';
+    type.textContent = 'Reversal Predicted';
   }
+
   const dir = parseFloat(p.zscore) > 0 ? 'spiked up' : 'dropped down';
   document.getElementById('alert-sub').textContent = `${p.symbol} ${dir} — z-score ${parseFloat(p.zscore) > 0 ? '+' : ''}${parseFloat(p.zscore).toFixed(2)}`;
-  document.getElementById('alert-confidence').textContent = `${Math.round(p.confidence * 100)}%`;
-  document.getElementById('alert-price').textContent = p.symbol === 'BTCUSDT' ? `$${parseFloat(p.price).toLocaleString()}` : `$${parseFloat(p.price).toFixed(4)}`;
-  document.getElementById('alert-direction').textContent = parseFloat(p.zscore) > 0 ? 'UP ↑' : 'DOWN ↓';
-  document.getElementById('alert-time').textContent = p.time;
-}
+  document.getElementById('al-conf').textContent = `${Math.round(p.confidence*100)}%`;
+  document.getElementById('al-dir').textContent = parseFloat(p.zscore) > 0 ? 'UP ↑' : 'DOWN ↓';
+  document.getElementById('al-price').textContent = p.symbol === 'BTCUSDT' ? `$${parseFloat(p.price).toLocaleString()}` : `$${parseFloat(p.price).toFixed(4)}`;
+  document.getElementById('al-time').textContent = p.time;
 
-function updatePrices(predictions) {
-  const btc = predictions.find(p => p.symbol === 'BTCUSDT');
-  const xrp = predictions.find(p => p.symbol === 'XRPUSDT');
-  if (btc && btc.price) {
-    document.getElementById('btc-price').textContent = `$${parseFloat(btc.price).toLocaleString()}`;
-    document.getElementById('btc-change').textContent = `z-score: ${parseFloat(btc.zscore).toFixed(2)}`;
-    document.getElementById('btc-change').className = `change ${parseFloat(btc.zscore) > 0 ? 'up' : 'down'}`;
-  }
-  if (xrp && xrp.price) {
-    document.getElementById('xrp-price').textContent = `$${parseFloat(xrp.price).toFixed(4)}`;
-    document.getElementById('xrp-change').textContent = `z-score: ${parseFloat(xrp.zscore).toFixed(2)}`;
-    document.getElementById('xrp-change').className = `change ${parseFloat(xrp.zscore) > 0 ? 'up' : 'down'}`;
+  // Price prediction
+  if (p.pctChange !== null && p.predictedPrice !== null) {
+    const sign = p.pctChange >= 0 ? '+' : '';
+    const cls = p.pctChange >= 0 ? 'up' : 'down';
+    document.getElementById('pp-change').className = `pp-change ${cls}`;
+    document.getElementById('pp-change').textContent = `${sign}${(p.pctChange*100).toFixed(3)}% next hour`;
+    document.getElementById('pp-price').textContent = p.symbol === 'BTCUSDT'
+      ? `$${parseFloat(p.predictedPrice).toLocaleString()}`
+      : `$${parseFloat(p.predictedPrice).toFixed(4)}`;
+    document.getElementById('pp-row').style.display = 'flex';
+  } else {
+    document.getElementById('pp-row').style.display = 'none';
   }
 }
-
-// ===================== REFRESH =====================
 
 async function refresh() {
-  const [predictions, stats] = await Promise.all([
-    fetchPredictions(currentSymbol),
-    fetchStats(currentSymbol)
-  ]);
-
+  const predictions = await fetchPredictions(currentSymbol);
   allPredictions = predictions;
   renderTable();
 
   const filtered = getFiltered();
   if (filtered.length > 0) {
     updateAlert(filtered[0]);
-    updateFeatureSnapshot(filtered[0]);
-    updateZscore(filtered[0].zscore);
-    updatePrices(predictions);
+    updateFeature(filtered[0]);
   }
 
-  if (stats) {
-    document.getElementById('metric-anomalies').textContent = stats.total_predictions || 0;
-    document.getElementById('metric-anomalies-sub').textContent = `${stats.btc_count || 0} BTC + ${stats.xrp_count || 0} XRP`;
-    document.getElementById('metric-alerts').textContent = stats.alerts_sent || 0;
-    document.getElementById('metric-confidence').textContent = stats.avg_confidence ? `${Math.round(stats.avg_confidence * 100)}%` : '--';
-    document.getElementById('dynamo-count').textContent = `${stats.total_predictions || 0} items`;
-    document.getElementById('sns-count').textContent = `${stats.alerts_sent || 0} sent`;
-    document.getElementById('prediction-count').textContent = `${stats.total_predictions || 0} total`;
-  }
+  const btc = predictions.filter(p => p.symbol === 'BTCUSDT').length;
+  const xrp = predictions.filter(p => p.symbol === 'XRPUSDT').length;
+  const avgConf = predictions.length > 0
+    ? Math.round(predictions.reduce((s,p) => s + p.confidence, 0) / predictions.length * 100)
+    : 0;
+  const alerts = predictions.filter(p => p.confidence >= 0.6).length;
 
+  document.getElementById('metric-anomalies').textContent = predictions.length;
+  document.getElementById('metric-sub').textContent = `${btc} BTC · ${xrp} XRP`;
+  document.getElementById('metric-alerts').textContent = alerts;
+  document.getElementById('metric-conf').textContent = avgConf ? `${avgConf}%` : '--';
+  document.getElementById('h-dynamo').textContent = `${predictions.length} items`;
+  document.getElementById('h-sns').textContent = `${alerts} sent`;
   document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
 }
-
-// ===================== CONTROLS =====================
 
 function setSymbol(sym, btn) {
   currentSymbol = sym;
@@ -556,9 +657,8 @@ function setSymbol(sym, btn) {
   refresh();
 }
 
-// ===================== INIT =====================
 refresh();
-setInterval(refresh, 60000); // Auto-refresh every 60 seconds
+setInterval(refresh, 60000);
 </script>
 </body>
 </html>
